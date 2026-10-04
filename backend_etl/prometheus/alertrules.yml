@@ -1,0 +1,29 @@
+groups:
+  - name: immersion_german_alerts
+    rules:
+      - alert: OllamaServiceDown
+        expr: etl_ollama_up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Ollama instance is offline"
+          description: "The ETL daemon cannot reach Ollama. Check the docker container or hardware GPU allocation."
+
+      - alert: HighQueueDepth
+        expr: etl_queue_depth{status="parsed"} > 50
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ETL Queue is backing up"
+          description: "There are more than 50 parsed videos pending analysis in Supabase. Check if the daemon process is blocked or running slowly."
+
+      - alert: ETLProcessingErrors
+        expr: rate(etl_processed_videos_total{status="error"}[5m]) / rate(etl_processed_videos_total[5m]) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "ETL Daemon error rate is high"
+          description: "Over 10% of videos processed in the last 5 minutes resulted in errors. Check logs for API blocks or subtitle downloading issues."
